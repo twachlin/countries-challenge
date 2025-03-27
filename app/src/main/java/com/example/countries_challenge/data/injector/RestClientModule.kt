@@ -1,6 +1,7 @@
 package com.example.countries_challenge.data.injector
 
 import android.content.Context
+import com.example.countries_challenge.data.feature.countries.net.CountriesApi
 import com.example.countries_challenge.data.util.net.interceptor.ConnectivityInterceptor
 import dagger.Module
 import dagger.Provides
@@ -57,5 +58,11 @@ class RestClientModule {
             .addConverterFactory(gsonConverter)
             .client(client.build())
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCountriesApi(@Named("Retrofit") retrofit: Retrofit): CountriesApi {
+        return retrofit.create(CountriesApi::class.java)
     }
 }
