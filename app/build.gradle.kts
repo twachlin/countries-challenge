@@ -1,9 +1,12 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.android.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.google.maps.secrets)
 }
 
 android {
@@ -18,6 +21,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val secretsFile = file("${rootDir}/secrets.properties")
+        val properties = Properties()
+        properties.load(secretsFile.inputStream())
+        val mapsApiKey: String = properties.getProperty("MAPS_API_KEY") ?: ""
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     buildTypes {
@@ -64,6 +73,9 @@ dependencies {
     // Room
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
+
+    // Maps
+    implementation(libs.google.maps.compose)
 
     // Testing
     testImplementation(libs.junit)
