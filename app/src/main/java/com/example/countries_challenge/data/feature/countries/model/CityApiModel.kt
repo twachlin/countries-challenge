@@ -2,7 +2,7 @@ package com.example.countries_challenge.data.feature.countries.model
 
 import com.google.gson.annotations.SerializedName
 
-data class CountryApiModel(
+data class CityApiModel(
     @SerializedName("country")
     val country: String?,
     @SerializedName("name")
@@ -10,10 +10,10 @@ data class CountryApiModel(
     @SerializedName("_id")
     val id: Int?,
     @SerializedName("coord")
-    val coordinates: CountryLocationApiModel?
+    val coordinates: CityLocationApiModel?
 )
 
-data class CountryLocationApiModel(
+data class CityLocationApiModel(
     @SerializedName("lon")
     val lon: Double?,
     @SerializedName("lat")

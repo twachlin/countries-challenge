@@ -1,13 +1,13 @@
 package com.example.countries_challenge.domain.feature.countries.model
 
-data class CountryModel (
+data class CityModel (
     val country: String,
     val name: String,
     val id: Int,
-    val coordinates: CountryLocationModel
+    val coordinates: CityLocationModel
 )
 
-data class CountryLocationModel(
+data class CityLocationModel(
     val lon: Double,
     val lat: Double
 )

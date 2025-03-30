@@ -1,14 +1,22 @@
 package com.example.countries_challenge.data.feature.countries.local
 
 import androidx.room.Transaction
-import com.example.countries_challenge.data.feature.countries.local.entity.CountryEntity
+import com.example.countries_challenge.data.feature.countries.local.entity.CityEntity
 import javax.inject.Inject
 
 class CountriesLocalDataSource @Inject constructor(
     private val countryDao: CountryDao
 ) {
     @Transaction
-    fun saveCountries(countries: List<CountryEntity>) {
-        countryDao.insertAllCountries(countries)
+    fun saveCities(countries: List<CityEntity>) {
+        countryDao.insertAllCities(countries)
+    }
+
+    fun getCitiesByNamePaged(
+        cityNames: List<String>,
+        pageSize: Int,
+        offset: Int
+    ): List<CityEntity> {
+        return countryDao.getCitiesByNamePaged(cityNames, pageSize, offset)
     }
 }

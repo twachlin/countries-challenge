@@ -3,11 +3,11 @@ package com.example.countries_challenge.data.injector.room
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.example.countries_challenge.data.feature.countries.local.CountryDao
-import com.example.countries_challenge.data.feature.countries.local.entity.CountryEntity
+import com.example.countries_challenge.data.feature.countries.local.entity.CityEntity
 
 @Database(
     entities = [
-        CountryEntity::class,
+        CityEntity::class,
     ],
     version = 1,
     exportSchema = false
