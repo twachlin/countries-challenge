@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">countries-challenge</string>
+
+    <string name="city_title">%1$s, %2$s</string>
+    <string name="city_subtitle">Lat: %1$s, Lon: %2$s</string>
+    <string name="details">Details</string>
+    <string name="filter">Filter</string>
+    <string name="show_favourites">Show favourites</string>
+    <string name="detail_screen_title">Detail of city: %1$s</string>
 </resources>
