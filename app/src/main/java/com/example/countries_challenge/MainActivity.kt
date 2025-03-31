@@ -3,17 +3,27 @@ package com.example.countries_challenge
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
-import com.example.countries_challenge.presentation.feature.maps.components.CitiesMap
+import androidx.activity.viewModels
+import androidx.navigation.compose.rememberNavController
+import com.example.countries_challenge.presentation.feature.mainnavigation.MainNavigation
+import com.example.countries_challenge.presentation.viewmodel.cities.CitiesViewModel
 import com.example.countries_challenge.ui.theme.CountriesChallengeTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private val viewModel: CitiesViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            val navController = rememberNavController()
             CountriesChallengeTheme {
-                CitiesMap(modifier = Modifier.fillMaxSize())
+                MainNavigation(
+                    viewModel = viewModel,
+                    navController = navController
+                )
             }
         }
     }

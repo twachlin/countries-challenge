@@ -87,4 +87,17 @@ class CountriesRepositoryImpl @Inject constructor(
         )
     }
 
+    override suspend fun getCitiesPaged(
+        page: Int,
+        pageSize: Int
+    ): UseCaseResult<List<CityModel>> {
+        return safeApiCall {
+            val cities = countriesLocalDataSource.getCitiesPaged(
+                pageSize = pageSize,
+                offset = (page - 1) * pageSize
+            )
+            cities.toCountryModelList()
+        }
+    }
+
 }

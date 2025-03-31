@@ -25,4 +25,7 @@ interface CountryDao {
         pageSize: Int,
         offset: Int,
     ): List<CityEntity>
+
+    @Query("SELECT * FROM cities ORDER BY name ASC LIMIT :pageSize OFFSET :offset")
+    fun getCitiesPaged(pageSize: Int, offset: Int): List<CityEntity>
 }

@@ -19,4 +19,8 @@ class CountriesLocalDataSource @Inject constructor(
     ): List<CityEntity> {
         return countryDao.getCitiesByNamePaged(cityNames, pageSize, offset)
     }
+
+    fun getCitiesPaged(pageSize: Int, offset: Int): List<CityEntity> {
+        return countryDao.getCitiesPaged(pageSize, offset)
+    }
 }

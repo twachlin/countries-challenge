@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.android.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.google.maps.secrets)
+    alias(libs.plugins.kotlinx.serialization.plugin)
 }
 
 android {
@@ -55,12 +56,14 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.kotlinx.serialization)
 
     // Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.compose.navigation)
 
     // Dependency Injection
     implementation(libs.hilt.android)
