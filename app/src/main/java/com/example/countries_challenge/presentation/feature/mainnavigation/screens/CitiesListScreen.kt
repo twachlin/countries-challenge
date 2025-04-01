@@ -2,10 +2,7 @@ package com.example.countries_challenge.presentation.feature.mainnavigation.scre
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -14,11 +11,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.navigation.compose.rememberNavController
 import com.example.countries_challenge.presentation.feature.mainnavigation.components.BigLoader
-import com.example.countries_challenge.presentation.feature.mainnavigation.components.TopBarContent
 import com.example.countries_challenge.presentation.feature.mainnavigation.screens.landscape.LandscapeScreen
-import com.example.countries_challenge.presentation.feature.mainnavigation.screens.portrait.PortraitScreen
+import com.example.countries_challenge.presentation.feature.mainnavigation.screens.portrait.PortraitNavigation
 import com.example.countries_challenge.presentation.viewmodel.cities.CitiesViewModel
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -42,42 +43,42 @@ fun CitiesListScreen(
         }
     }
     val debouncedSearchValue = remember { derivedStateOf { state.value.searchValue } }
+    val markerState = rememberMarkerState()
+    val cameraPositionState = rememberCameraPositionState()
+    val portraitScreenNavController = rememberNavController()
 
     if (state.value.isLoading) {
         BigLoader(modifier = Modifier.fillMaxSize())
     } else {
-        Scaffold(
-            topBar = {
-                TopBarContent(
-                    modifier = Modifier.fillMaxWidth(),
-                    searchValue = state.value.searchValue,
-                    onSearchValueChange = viewModel::updateSearchValue,
-                    onFilterByFavouritesClick = onFilterByFavouritesClick,
-                )
-            },
-            content = { paddingValues ->
-                if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    LandscapeScreen(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                        cities = state.value.cities,
-                        lazyListState = listState,
-                        isLoadingMoreCities = state.value.isLoadingMoreCities,
-                    )
-                } else {
-                    PortraitScreen(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                        cities = state.value.cities,
-                        showMap = state.value.showMap,
-                        lazyListState = listState,
-                        isLoadingMoreCities = state.value.isLoadingMoreCities,
-                    )
-                }
-            }
-        )
+
+        if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            LandscapeScreen(
+                modifier = Modifier.fillMaxSize(),
+                cities = state.value.cities,
+                lazyListState = listState,
+                isLoadingMoreCities = state.value.isLoadingMoreCities,
+                markerState = markerState,
+                cameraPositionState = cameraPositionState,
+                searchValue = state.value.searchValue,
+                onSearchValueChange = viewModel::updateSearchValue,
+                onFilterByFavouritesClick = onFilterByFavouritesClick,
+                onCityClick = { index -> viewModel.onCityClick(index) }
+            )
+        } else {
+            PortraitNavigation(
+                modifier = Modifier.fillMaxSize(),
+                cities = state.value.cities,
+                lazyListState = listState,
+                isLoadingMoreCities = state.value.isLoadingMoreCities,
+                markerState = markerState,
+                cameraPositionState = cameraPositionState,
+                onCityClick = { index -> viewModel.onCityClick(index) },
+                navController = portraitScreenNavController,
+                searchValue = state.value.searchValue,
+                onSearchValueChange = viewModel::updateSearchValue,
+                onFilterByFavouritesClick = onFilterByFavouritesClick,
+            )
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -101,5 +102,13 @@ fun CitiesListScreen(
             .collect {
                 viewModel.onSearchValueChange(it)
             }
+    }
+
+    LaunchedEffect(state.value.selectedCity) {
+        state.value.selectedCity?.let {
+            val position = LatLng(it.lat, it.lon)
+            markerState.position = position
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(position, 10f)
+        }
     }
 }
