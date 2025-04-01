@@ -93,7 +93,7 @@ class CitiesViewModel @Inject constructor(
 
     fun onSearchValueChange(value: String) {
         resetData()
-        getCitiesPaged(value)
+        getCitiesPaged(value.takeIf { it.isNotBlank() })
     }
 
     private fun resetData() {
