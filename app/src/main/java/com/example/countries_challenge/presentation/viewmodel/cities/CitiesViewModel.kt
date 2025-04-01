@@ -100,12 +100,18 @@ class CitiesViewModel @Inject constructor(
         citiesPage = 1
         _screenState.update { state -> state.copy(cities = emptyList()) }
     }
+
+    fun onCityClick(index: Int) {
+        _screenState.update { state ->
+            state.copy(selectedCity = state.cities[index])
+        }
+    }
 }
 
 data class CitiesListScreenState(
     val cities: List<CityListItemUiModel> = emptyList(),
     val isLoading: Boolean = true,
-    val showMap: Boolean = false,
     val searchValue: String = "",
     val isLoadingMoreCities: Boolean = false,
+    val selectedCity: CityListItemUiModel? = null,
 )
