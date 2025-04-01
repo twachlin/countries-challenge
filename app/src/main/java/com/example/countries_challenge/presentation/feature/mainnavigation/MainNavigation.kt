@@ -33,7 +33,6 @@ fun MainNavigation(
         composable<CitiesList> {
             CitiesListScreen(
                 viewModel = viewModel,
-                onSearchValueChange = {},
                 onFilterByFavouritesClick = {},
             )
         }

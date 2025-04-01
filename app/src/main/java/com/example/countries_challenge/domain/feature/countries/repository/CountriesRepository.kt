@@ -1,6 +1,7 @@
 package com.example.countries_challenge.domain.feature.countries.repository
 
 import com.example.countries_challenge.domain.feature.countries.model.CityModel
+import com.example.countries_challenge.domain.feature.countries.usecase.CitiesPagedModel
 import com.example.countries_challenge.domain.utils.UseCaseResult
 
 interface CountriesRepository {
@@ -14,6 +15,7 @@ interface CountriesRepository {
 
     suspend fun getCitiesPaged(
         page: Int,
-        pageSize: Int
-    ): UseCaseResult<List<CityModel>>
+        pageSize: Int,
+        prefix: String?,
+    ): UseCaseResult<CitiesPagedModel>
 }

@@ -54,16 +54,17 @@ class Trie {
      * @return A list of words starting with the specified prefix.
      */
     fun startsWith(prefix: String): List<String> {
+        val lowerCasePrefix = prefix.lowercase()
         val result = mutableListOf<String>()
         var node = root
 
         // Traverse the Trie to the node representing the prefix
-        prefix.forEach { char ->
+        lowerCasePrefix.forEach { char ->
             node = node.children[char] ?: return result
         }
 
         // Collect words starting from the prefix
-        collectWords(node, prefix, result)
+        collectWords(node, lowerCasePrefix, result)
         return result
     }
 
