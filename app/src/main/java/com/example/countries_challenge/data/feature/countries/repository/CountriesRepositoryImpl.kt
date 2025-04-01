@@ -9,6 +9,7 @@ import com.example.countries_challenge.data.feature.countries.net.CountriesDataS
 import com.example.countries_challenge.data.util.net.BaseRepository
 import com.example.countries_challenge.domain.feature.countries.model.CityModel
 import com.example.countries_challenge.domain.feature.countries.repository.CountriesRepository
+import com.example.countries_challenge.domain.feature.countries.usecase.CitiesPagedModel
 import com.example.countries_challenge.domain.utils.UseCaseResult
 import javax.inject.Inject
 
@@ -89,14 +90,29 @@ class CountriesRepositoryImpl @Inject constructor(
 
     override suspend fun getCitiesPaged(
         page: Int,
-        pageSize: Int
-    ): UseCaseResult<List<CityModel>> {
+        pageSize: Int,
+        prefix: String?,
+    ): UseCaseResult<CitiesPagedModel> {
         return safeApiCall {
-            val cities = countriesLocalDataSource.getCitiesPaged(
-                pageSize = pageSize,
-                offset = (page - 1) * pageSize
-            )
+            val offset = (page - 1) * pageSize
+            val cities = if (prefix != null) {
+                countriesLocalDataSource.getCitiesByNamePaged(
+                    cityNames = CountriesCacheDataSource.getCitiesByPrefix(prefix),
+                    pageSize = pageSize,
+                    offset = offset
+                )
+            } else {
+                countriesLocalDataSource.getCitiesPaged(
+                    pageSize = pageSize,
+                    offset = offset
+                )
+            }
+            val isLastPage = cities.size < pageSize
             cities.toCountryModelList()
+            CitiesPagedModel(
+                cities = cities.toCountryModelList(),
+                isLastPage = isLastPage
+            )
         }
     }
 
