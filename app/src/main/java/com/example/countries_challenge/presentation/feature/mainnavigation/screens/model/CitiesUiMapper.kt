@@ -5,10 +5,12 @@ import com.example.countries_challenge.presentation.feature.mainnavigation.compo
 
 fun CityModel.toCityListItemUIModel(): CityListItemUiModel {
     return CityListItemUiModel(
+        id = id,
         country = country,
         name = name,
         lat = coordinates.lat,
         lon = coordinates.lon,
-        isFavourite = false,
+        isFavourite = isFavourite,
+        isUpdatingFavoriteState = false,
     )
 }

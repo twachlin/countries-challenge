@@ -10,6 +10,6 @@ class ImportCountriesUseCase @Inject constructor(
 ) : BaseUseCase<Unit, Unit>() {
 
     override suspend fun buildUseCase(params: Unit): UseCaseResult<Unit> {
-        return countriesRepository.importCountriesFromRemote()
+        return countriesRepository.importCitiesIfNecessary()
     }
 }

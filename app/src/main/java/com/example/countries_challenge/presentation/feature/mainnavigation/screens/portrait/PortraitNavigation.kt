@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -50,13 +51,15 @@ fun PortraitNavigation(
     cities: List<CityListItemUiModel>,
     lazyListState: LazyListState,
     onCityClick: (index: Int) -> Unit,
-    modifier: Modifier = Modifier,
-    isLoadingMoreCities: Boolean = false,
     markerState: MarkerState,
     cameraPositionState: CameraPositionState,
     searchValue: String,
     onSearchValueChange: (String) -> Unit,
     onFilterByFavouritesClick: () -> Unit,
+    onFavoriteIconClick: (Int) -> Unit,
+    isFavoritesFilterActive: Boolean,
+    modifier: Modifier = Modifier,
+    isLoadingMoreCities: Boolean = false,
 ) {
     NavHost(
         modifier = modifier,
@@ -76,6 +79,8 @@ fun PortraitNavigation(
                 searchValue = searchValue,
                 onSearchValueChange = onSearchValueChange,
                 onFilterByFavouritesClick = onFilterByFavouritesClick,
+                onFavoriteIconClick = onFavoriteIconClick,
+                isFavoritesFilterActive = isFavoritesFilterActive
             )
         }
 
@@ -98,6 +103,8 @@ private fun PortraitScreenCitiesContent(
     searchValue: String,
     onSearchValueChange: (String) -> Unit,
     onFilterByFavouritesClick: () -> Unit,
+    onFavoriteIconClick: (index: Int) -> Unit,
+    isFavoritesFilterActive: Boolean,
     modifier: Modifier = Modifier,
     isLoadingMoreCities: Boolean = false,
 ) {
@@ -109,6 +116,7 @@ private fun PortraitScreenCitiesContent(
                 searchValue = searchValue,
                 onSearchValueChange = onSearchValueChange,
                 onFilterByFavouritesClick = onFilterByFavouritesClick,
+                isFavoritesFilterActive = isFavoritesFilterActive,
             )
         },
         content = { paddingValues ->
@@ -118,16 +126,19 @@ private fun PortraitScreenCitiesContent(
                     .fillMaxSize()
                     .padding(paddingValues),
             ) {
-                items(cities.size) { index ->
+                itemsIndexed(cities) { index, model ->
                     CityListItem(
                         modifier = Modifier
                             .background(if (index % 2 == 0) Color.LightGray else Color.Transparent)
                             .padding(horizontal = 8.dp)
-                            .clickable { onCityClick(index) },
-                        model = cities[index],
-                        onFavouriteIconClick = {},
+                            .clickable { onCityClick(model.id) },
+                        model = model,
+                        onFavouriteIconClick = {
+                            onFavoriteIconClick(model.id)
+                        },
                     )
                 }
+
                 if (isLoadingMoreCities) {
                     item {
                         SmallLoader(
@@ -190,10 +201,10 @@ private fun PortraitScreenMapContent(
 private fun PortraitScreenPreview() {
     PortraitNavigation(
         cities = listOf(
-            CityListItemUiModel("AR", "La Plata", -34.92, -57.95, false),
-            CityListItemUiModel("AR", "Buenos Aires", -34.92, -57.95, false),
-            CityListItemUiModel("AR", "Ensenada", -34.92, -57.95, false),
-            CityListItemUiModel("AR", "Berisso", -34.92, -57.95, false),
+            CityListItemUiModel(id = 1, "AR", "La Plata", -34.92, -57.95, false, false),
+            CityListItemUiModel(id = 1, "AR", "Buenos Aires", -34.92, -57.95, false, false),
+            CityListItemUiModel(id = 1, "AR", "Ensenada", -34.92, -57.95, false, false),
+            CityListItemUiModel(id = 1, "AR", "Berisso", -34.92, -57.95, false, false),
         ),
         lazyListState = rememberLazyListState(),
         markerState = rememberMarkerState(),
@@ -203,5 +214,7 @@ private fun PortraitScreenPreview() {
         searchValue = "",
         onSearchValueChange = {},
         onFilterByFavouritesClick = {},
+        onFavoriteIconClick = {},
+        isFavoritesFilterActive = false,
     )
 }

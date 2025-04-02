@@ -31,10 +31,7 @@ fun MainNavigation(
         startDestination = CitiesList
     ) {
         composable<CitiesList> {
-            CitiesListScreen(
-                viewModel = viewModel,
-                onFilterByFavouritesClick = {},
-            )
+            CitiesListScreen(viewModel = viewModel)
         }
         composable<CityDetails> { backStackEntry ->
             val cityDetails: CityDetails = backStackEntry.toRoute()

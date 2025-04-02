@@ -4,10 +4,15 @@ import android.content.res.Configuration
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -27,10 +32,8 @@ import kotlinx.coroutines.flow.filter
 
 @OptIn(FlowPreview::class)
 @Composable
-fun CitiesListScreen(
-    viewModel: CitiesViewModel,
-    onFilterByFavouritesClick: () -> Unit,
-) {
+fun CitiesListScreen(viewModel: CitiesViewModel) {
+    var isFirstTime by rememberSaveable { mutableStateOf(false) }
     val state = viewModel.screenState.collectAsState()
     val listState = rememberLazyListState()
     val configuration = LocalConfiguration.current
@@ -61,8 +64,10 @@ fun CitiesListScreen(
                 cameraPositionState = cameraPositionState,
                 searchValue = state.value.searchValue,
                 onSearchValueChange = viewModel::updateSearchValue,
-                onFilterByFavouritesClick = onFilterByFavouritesClick,
-                onCityClick = { index -> viewModel.onCityClick(index) }
+                onFilterByFavouritesClick = viewModel::onFavoriteFilterButtonClick,
+                onCityClick = { index -> viewModel.onCityClick(index) },
+                onFavoriteIconClick = viewModel::onFavoriteIconClick,
+                isFavoritesFilterActive = state.value.isFavoriteFilterActive,
             )
         } else {
             PortraitNavigation(
@@ -76,16 +81,14 @@ fun CitiesListScreen(
                 navController = portraitScreenNavController,
                 searchValue = state.value.searchValue,
                 onSearchValueChange = viewModel::updateSearchValue,
-                onFilterByFavouritesClick = onFilterByFavouritesClick,
+                onFilterByFavouritesClick = viewModel::onFavoriteFilterButtonClick,
+                onFavoriteIconClick = viewModel::onFavoriteIconClick,
+                isFavoritesFilterActive = state.value.isFavoriteFilterActive,
             )
         }
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.getCities()
-    }
-
-    LaunchedEffect(listState) {
+    LaunchedEffect(shouldLoadMore) {
         snapshotFlow { shouldLoadMore.value }
             .distinctUntilChanged()
             .filter { it }  // Ensure that we load more items only when needed
@@ -98,10 +101,20 @@ fun CitiesListScreen(
     LaunchedEffect(debouncedSearchValue) {
         snapshotFlow { debouncedSearchValue.value }
             .debounce(300)
-            .distinctUntilChanged()
             .collect {
-                viewModel.onSearchValueChange(it)
+                if (isFirstTime) {
+                    isFirstTime = false
+                } else {
+                    viewModel.makeNewSearch()
+                }
             }
+
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            isFirstTime = true
+        }
     }
 
     LaunchedEffect(state.value.selectedCity) {

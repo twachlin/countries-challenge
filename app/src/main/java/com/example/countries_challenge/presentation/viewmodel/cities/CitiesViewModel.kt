@@ -1,12 +1,15 @@
 package com.example.countries_challenge.presentation.viewmodel.cities
 
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.countries_challenge.domain.extensions.onSuccess
+import com.example.countries_challenge.domain.feature.countries.model.CitiesPagedModel
 import com.example.countries_challenge.domain.feature.countries.model.CityModel
-import com.example.countries_challenge.domain.feature.countries.usecase.CitiesPagedModel
 import com.example.countries_challenge.domain.feature.countries.usecase.GetCitiesPagedUseCase
 import com.example.countries_challenge.domain.feature.countries.usecase.ImportCountriesUseCase
+import com.example.countries_challenge.domain.feature.countries.usecase.RemoveCityFromFavoritesUseCase
+import com.example.countries_challenge.domain.feature.countries.usecase.SetCityAsFavoriteUseCase
 import com.example.countries_challenge.presentation.feature.mainnavigation.components.CityListItemUiModel
 import com.example.countries_challenge.presentation.feature.mainnavigation.screens.model.toCityListItemUIModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +25,8 @@ import javax.inject.Inject
 class CitiesViewModel @Inject constructor(
     private val importCountriesUseCase: ImportCountriesUseCase,
     private val getCitiesPagedUseCase: GetCitiesPagedUseCase,
+    private val setCityAsFavoriteUseCase: SetCityAsFavoriteUseCase,
+    private val removeCityFromFavoritesUseCase: RemoveCityFromFavoritesUseCase,
 ) : ViewModel() {
 
     private val _screenState = MutableStateFlow(CitiesListScreenState())
@@ -31,10 +36,14 @@ class CitiesViewModel @Inject constructor(
     private val citiesModel = mutableListOf<CityModel>()
     private var isLastPage = false
 
+    init {
+        importCitiesIfNecessary()
+    }
+
     /**
      * Imports cities if the local database is empty. And then fetches the first page of cities.
      */
-    fun getCities() {
+    fun importCitiesIfNecessary() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 importCountriesUseCase.execute(Unit).onSuccess {
@@ -59,6 +68,7 @@ class CitiesViewModel @Inject constructor(
                     params = GetCitiesPagedUseCase.Params(
                         page = citiesPage,
                         prefix = prefix,
+                        showOnlyFavorites = screenState.value.isFavoriteFilterActive
                     )
                 ).onSuccess { model ->
                     updateCities(citiesPagedModel = model)
@@ -74,6 +84,7 @@ class CitiesViewModel @Inject constructor(
         val citiesUiModel = citiesPagedModel.cities.map { it.toCityListItemUIModel() }
         _screenState.update { state ->
             state.copy(
+                isLoading = false,
                 cities = state.cities + citiesUiModel,
                 isLoadingMoreCities = false,
             )
@@ -91,13 +102,14 @@ class CitiesViewModel @Inject constructor(
         _screenState.update { state -> state.copy(searchValue = value) }
     }
 
-    fun onSearchValueChange(value: String) {
+    fun makeNewSearch() {
         resetData()
-        getCitiesPaged(value.takeIf { it.isNotBlank() })
+        getCitiesPaged(screenState.value.searchValue.takeIf { it.isNotBlank() })
     }
 
     private fun resetData() {
         citiesPage = 1
+        isLastPage = false
         _screenState.update { state -> state.copy(cities = emptyList()) }
     }
 
@@ -106,12 +118,113 @@ class CitiesViewModel @Inject constructor(
             state.copy(selectedCity = state.cities[index])
         }
     }
+
+    private fun setCityAsUpdatingFavoriteState(id: Int) {
+        _screenState.update { state ->
+            state.copy(
+                cities = state.cities.mapIndexed { index, city ->
+                    if (city.id == id) {
+                        city.copy(isUpdatingFavoriteState = true)
+                    } else {
+                        city
+                    }
+                }
+            )
+        }
+    }
+
+    fun onFavoriteFilterButtonClick() {
+        _screenState.update { state ->
+            state.copy(
+                isLoading = true,
+                isFavoriteFilterActive = !state.isFavoriteFilterActive
+            )
+        }
+        makeNewSearch()
+    }
+
+    fun onFavoriteIconClick(id: Int) {
+        val cityModel = citiesModel.firstOrNull { it.id == id }
+        cityModel?.let {
+            setCityAsUpdatingFavoriteState(id = id)
+            if (cityModel.isFavourite) {
+                removeCityFromFavorites(cityModel = cityModel)
+            } else {
+                addCityToFavorites(cityModel = cityModel)
+            }
+        }
+    }
+
+    fun addCityToFavorites(cityModel: CityModel) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                setCityAsFavoriteUseCase.execute(
+                    params = SetCityAsFavoriteUseCase.Params(city = cityModel)
+                ).onSuccess {
+                    // 1. Update the local list (citiesModel)
+                    val localCityIndex = citiesModel.indexOfFirst { it.id == cityModel.id }
+                    if (localCityIndex != -1) {
+                        citiesModel[localCityIndex] = cityModel.copy(isFavourite = true)
+
+                        _screenState.update { state ->
+                            state.copy(
+                                cities = state.cities.map { uiModel ->
+                                    if (uiModel.id == cityModel.id) {
+                                        uiModel.copy(
+                                            isFavourite = true,
+                                            isUpdatingFavoriteState = false
+                                        )
+                                    } else {
+                                        uiModel
+                                    }
+                                }
+                            )
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
+    fun removeCityFromFavorites(cityModel: CityModel) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                removeCityFromFavoritesUseCase.execute(
+                    params = RemoveCityFromFavoritesUseCase.Params(city = cityModel)
+                ).onSuccess {
+                    // 1. Update the local list (citiesModel)
+                    val localCityIndex = citiesModel.indexOfFirst { it.id == cityModel.id }
+                    if (localCityIndex != -1) {
+                        citiesModel[localCityIndex] = cityModel.copy(isFavourite = false)
+
+                        _screenState.update { state ->
+                            state.copy(
+                                cities = state.cities.map { uiModel ->
+                                    if (uiModel.id == cityModel.id) {
+                                        uiModel.copy(
+                                            isFavourite = false,
+                                            isUpdatingFavoriteState = false
+                                        )
+                                    } else {
+                                        uiModel
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
+@Stable
 data class CitiesListScreenState(
     val cities: List<CityListItemUiModel> = emptyList(),
     val isLoading: Boolean = true,
     val searchValue: String = "",
     val isLoadingMoreCities: Boolean = false,
     val selectedCity: CityListItemUiModel? = null,
+    val isFavoriteFilterActive: Boolean = false,
 )

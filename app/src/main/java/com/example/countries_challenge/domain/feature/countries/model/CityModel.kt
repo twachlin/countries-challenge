@@ -4,6 +4,7 @@ data class CityModel (
     val country: String,
     val name: String,
     val id: Int,
+    val isFavourite: Boolean,
     val coordinates: CityLocationModel
 )
 

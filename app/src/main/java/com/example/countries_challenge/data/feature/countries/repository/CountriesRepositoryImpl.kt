@@ -2,14 +2,14 @@ package com.example.countries_challenge.data.feature.countries.repository
 
 import com.example.countries_challenge.data.feature.countries.cache.CountriesCacheDataSource
 import com.example.countries_challenge.data.feature.countries.local.CountriesLocalDataSource
-import com.example.countries_challenge.data.feature.countries.mapper.toCountryEntity
-import com.example.countries_challenge.data.feature.countries.mapper.toCountryModelList
+import com.example.countries_challenge.data.feature.countries.mapper.toCityEntity
+import com.example.countries_challenge.data.feature.countries.mapper.toCityModelList
 import com.example.countries_challenge.data.feature.countries.model.CityApiModel
 import com.example.countries_challenge.data.feature.countries.net.CountriesDataSource
 import com.example.countries_challenge.data.util.net.BaseRepository
+import com.example.countries_challenge.domain.feature.countries.model.CitiesPagedModel
 import com.example.countries_challenge.domain.feature.countries.model.CityModel
 import com.example.countries_challenge.domain.feature.countries.repository.CountriesRepository
-import com.example.countries_challenge.domain.feature.countries.usecase.CitiesPagedModel
 import com.example.countries_challenge.domain.utils.UseCaseResult
 import javax.inject.Inject
 
@@ -22,10 +22,20 @@ class CountriesRepositoryImpl @Inject constructor(
         private const val COUNTRIES_BATCH_SIZE = 500
     }
 
-    override suspend fun importCountriesFromRemote(): UseCaseResult<Unit> {
+    override suspend fun importCitiesIfNecessary(): UseCaseResult<Unit> {
         return safeApiCall {
-            val cities = countriesDataSource.getCities()
-            saveCitiesData(countries = cities)
+            val citiesCount = countriesLocalDataSource.getCitiesCount()
+            if (citiesCount == 0) {
+                val cities = countriesDataSource.getCities()
+                saveCitiesData(countries = cities)
+            } else {
+                val cityNames = countriesLocalDataSource.getAllCityNames()
+                cityNames.chunked(COUNTRIES_BATCH_SIZE).forEach { names ->
+                    names.forEach { name ->
+                        saveCityNameForSearch(name = name)
+                    }
+                }
+            }
         }
     }
 
@@ -37,7 +47,7 @@ class CountriesRepositoryImpl @Inject constructor(
         countries: List<CityApiModel>,
     ) {
         countries.chunked(COUNTRIES_BATCH_SIZE).forEach { apiModels ->
-            val entities = apiModels.mapNotNull { it.toCountryEntity() }
+            val entities = apiModels.mapNotNull { it.toCityEntity() }
 
             // Populate the Trie with city names for fast prefix-based searching.
             entities.forEach { entity ->
@@ -60,38 +70,11 @@ class CountriesRepositoryImpl @Inject constructor(
         CountriesCacheDataSource.addCityNameToTrie(name)
     }
 
-    suspend fun getCitiesByNamePaged(
-        cityNames: List<String>,
-        page: Int,
-        pageSize: Int
-    ): UseCaseResult<List<CityModel>> {
-        return safeApiCall {
-            val offset = (page - 1) * pageSize
-            countriesLocalDataSource.getCitiesByNamePaged(
-                cityNames = cityNames,
-                pageSize = pageSize,
-                offset = offset
-            ).toCountryModelList()
-        }
-    }
-
-    override suspend fun getCitiesByPrefix(
-        prefix: String,
-        page: Int,
-        pageSize: Int
-    ): UseCaseResult<List<CityModel>> {
-        val citiesNames = CountriesCacheDataSource.getCitiesByPrefix(prefix)
-        return getCitiesByNamePaged(
-            cityNames = citiesNames,
-            page = page,
-            pageSize = pageSize
-        )
-    }
-
     override suspend fun getCitiesPaged(
         page: Int,
         pageSize: Int,
         prefix: String?,
+        showOnlyFavorites: Boolean,
     ): UseCaseResult<CitiesPagedModel> {
         return safeApiCall {
             val offset = (page - 1) * pageSize
@@ -99,21 +82,42 @@ class CountriesRepositoryImpl @Inject constructor(
                 countriesLocalDataSource.getCitiesByNamePaged(
                     cityNames = CountriesCacheDataSource.getCitiesByPrefix(prefix),
                     pageSize = pageSize,
-                    offset = offset
+                    offset = offset,
+                    showOnlyFavorites = showOnlyFavorites
                 )
             } else {
                 countriesLocalDataSource.getCitiesPaged(
                     pageSize = pageSize,
-                    offset = offset
+                    offset = offset,
+                    showOnlyFavorites = showOnlyFavorites
                 )
             }
             val isLastPage = cities.size < pageSize
-            cities.toCountryModelList()
+            cities.toCityModelList()
             CitiesPagedModel(
-                cities = cities.toCountryModelList(),
+                cities = cities.toCityModelList(),
                 isLastPage = isLastPage
             )
         }
     }
 
+    override suspend fun getFavoriteCities(): UseCaseResult<List<CityModel>> {
+        return safeApiCall {
+            countriesLocalDataSource.getFavoriteCities().toCityModelList()
+        }
+    }
+
+    override suspend fun setCityAsFavorite(city: CityModel): UseCaseResult<Unit> {
+        return safeApiCall {
+            val cityModel = city.copy(isFavourite = true)
+            countriesLocalDataSource.updateCity(cityModel.toCityEntity())
+        }
+    }
+
+    override suspend fun removeCityFromFavorites(city: CityModel): UseCaseResult<Unit> {
+        return safeApiCall {
+            val cityModel = city.copy(isFavourite = false)
+            countriesLocalDataSource.updateCity(cityModel.toCityEntity())
+        }
+    }
 }
