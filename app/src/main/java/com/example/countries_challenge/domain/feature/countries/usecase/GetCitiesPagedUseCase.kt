@@ -1,15 +1,10 @@
 package com.example.countries_challenge.domain.feature.countries.usecase
 
 import com.example.countries_challenge.domain.base.BaseUseCase
-import com.example.countries_challenge.domain.feature.countries.model.CityModel
+import com.example.countries_challenge.domain.feature.countries.model.CitiesPagedModel
 import com.example.countries_challenge.domain.feature.countries.repository.CountriesRepository
 import com.example.countries_challenge.domain.utils.UseCaseResult
 import javax.inject.Inject
-
-data class CitiesPagedModel(
-    val cities: List<CityModel>,
-    val isLastPage: Boolean,
-)
 
 class GetCitiesPagedUseCase @Inject constructor(
     private val repository: CountriesRepository,
@@ -23,7 +18,8 @@ class GetCitiesPagedUseCase @Inject constructor(
         return repository.getCitiesPaged(
             pageSize = PAGE_SIZE,
             page = params.page,
-            prefix = params.prefix
+            prefix = params.prefix,
+            showOnlyFavorites = params.showOnlyFavorites
         )
     }
 
@@ -31,5 +27,6 @@ class GetCitiesPagedUseCase @Inject constructor(
     data class Params(
         val page: Int,
         val prefix: String?,
+        val showOnlyFavorites: Boolean = false,
     )
 }

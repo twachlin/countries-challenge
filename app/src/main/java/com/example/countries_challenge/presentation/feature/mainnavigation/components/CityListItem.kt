@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,11 +24,13 @@ import com.example.countries_challenge.R
 import com.example.countries_challenge.presentation.components.buttons.SecondaryButton
 
 data class CityListItemUiModel(
-    val country: String,
-    val name: String,
-    val lat: Double,
-    val lon: Double,
-    val isFavourite: Boolean,
+    val id: Int,
+    val country: String = "",
+    val name: String = "",
+    val lat: Double = 0.0,
+    val lon: Double = 0.0,
+    val isFavourite: Boolean = false,
+    val isUpdatingFavoriteState: Boolean = false,
 )
 
 @Composable
@@ -51,21 +55,30 @@ fun CityListItem(
         )
         Box(
             modifier = Modifier
-                .clickable(onClick = onFavouriteIconClick)
                 .padding(8.dp),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                modifier = Modifier.size(20.dp),
-                painter = painterResource(
-                    id = if (model.isFavourite) {
-                        R.drawable.ic_favorite_filled
-                    } else {
-                        R.drawable.ic_favourite_border
-                    }
-                ),
-                contentDescription = null
-            )
+            if (model.isUpdatingFavoriteState) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            } else {
+                Icon(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable(onClick = onFavouriteIconClick),
+                    painter = painterResource(
+                        id = if (model.isFavourite) {
+                            R.drawable.ic_favorite_filled
+                        } else {
+                            R.drawable.ic_favourite_border
+                        }
+                    ),
+                    contentDescription = null
+                )
+            }
         }
     }
 }
@@ -83,6 +96,8 @@ private fun CityListItemPreview() {
                 lat = -34.92,
                 lon = -57.95,
                 isFavourite = false,
+                isUpdatingFavoriteState = false,
+                id = 1,
             ),
         )
         CityListItem(
@@ -94,6 +109,21 @@ private fun CityListItemPreview() {
                 lat = -34.92567,
                 lon = -57.95656,
                 isFavourite = true,
+                isUpdatingFavoriteState = false,
+                id = 1,
+            ),
+        )
+        CityListItem(
+            modifier = Modifier.fillMaxWidth(),
+            onFavouriteIconClick = {},
+            model = CityListItemUiModel(
+                country = "AR",
+                name = "La Plata",
+                lat = -34.92567,
+                lon = -57.95656,
+                isFavourite = true,
+                isUpdatingFavoriteState = true,
+                id = 1,
             ),
         )
     }

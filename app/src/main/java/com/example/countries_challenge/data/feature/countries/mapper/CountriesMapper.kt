@@ -5,8 +5,8 @@ import com.example.countries_challenge.data.feature.countries.model.CityApiModel
 import com.example.countries_challenge.domain.feature.countries.model.CityLocationModel
 import com.example.countries_challenge.domain.feature.countries.model.CityModel
 
-fun CityApiModel.toCountryEntity(): CityEntity? {
-    val id = this.id?.toString() ?: return null
+fun CityApiModel.toCityEntity(): CityEntity? {
+    val id = this.id ?: return null
     val country = this.country ?: return null
     val name = this.name ?: return null
     val coordinates = this.coordinates ?: return null
@@ -23,21 +23,32 @@ fun CityApiModel.toCountryEntity(): CityEntity? {
 }
 
 /**
- * Maps a list of CountryEntity objects to a list of CountryModel objects.
+ * Maps a list of CityEntity objects to a list of CityModel objects.
  *
- * @param entities The list of CountryEntity objects to map.
- * @return A list of CountryModel objects.
+ * @return A list of CityModel objects.
  */
-fun List<CityEntity>.toCountryModelList(): List<CityModel> {
+fun List<CityEntity>.toCityModelList(): List<CityModel> {
     return this.map { entity ->
         CityModel(
             country = entity.country,
             name = entity.name,
-            id = entity.id.toInt(),
+            id = entity.id,
+            isFavourite = entity.isFavourite,
             coordinates = CityLocationModel(
                 lon = entity.lon,
                 lat = entity.lat
-            )
+            ),
         )
     }
+}
+
+fun CityModel.toCityEntity(): CityEntity {
+    return CityEntity(
+        id = id,
+        country = country,
+        name = name,
+        lon = coordinates.lon,
+        lat = coordinates.lat,
+        isFavourite = isFavourite
+    )
 }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -34,7 +35,9 @@ fun LandscapeScreen(
     markerState: MarkerState,
     onSearchValueChange: (String) -> Unit,
     onFilterByFavouritesClick: () -> Unit,
+    onFavoriteIconClick: (Int) -> Unit,
     onCityClick: (Int) -> Unit,
+    isFavoritesFilterActive: Boolean,
     modifier: Modifier = Modifier,
     isLoadingMoreCities: Boolean = false,
 ) {
@@ -47,6 +50,7 @@ fun LandscapeScreen(
                     searchValue = searchValue,
                     onSearchValueChange = onSearchValueChange,
                     onFilterByFavouritesClick = onFilterByFavouritesClick,
+                    isFavoritesFilterActive = isFavoritesFilterActive,
                 )
             },
             content = { paddingValues ->
@@ -55,16 +59,19 @@ fun LandscapeScreen(
                         modifier = Modifier.fillMaxSize(),
                         state = lazyListState,
                     ) {
-                        items(cities.size) { index ->
+                        itemsIndexed(cities) { index, model ->
                             CityListItem(
                                 modifier = Modifier
                                     .background(if (index % 2 == 0) Color.LightGray else Color.Transparent)
                                     .padding(horizontal = 8.dp)
-                                    .clickable { onCityClick(index) },
-                                model = cities[index],
-                                onFavouriteIconClick = {},
+                                    .clickable { onCityClick(model.id) },
+                                model = model,
+                                onFavouriteIconClick = {
+                                    onFavoriteIconClick(model.id)
+                                },
                             )
                         }
+
                         if (isLoadingMoreCities) {
                             item {
                                 SmallLoader(
@@ -95,10 +102,40 @@ fun LandscapeScreen(
 private fun LandScapeScreenPreview() {
     LandscapeScreen(
         cities = listOf(
-            CityListItemUiModel("AR", "La Plata", -34.92, -57.95, false),
-            CityListItemUiModel("AR", "Buenos Aires", -34.92, -57.95, false),
-            CityListItemUiModel("AR", "Ensenada", -34.92, -57.95, false),
-            CityListItemUiModel("AR", "Berisso", -34.92, -57.95, false),
+            CityListItemUiModel(
+                country = "AR", name = "La Plata", lat = -34.92,
+                lon = -57.95,
+                isFavourite = false,
+                isUpdatingFavoriteState = false,
+                id = 0,
+            ),
+            CityListItemUiModel(
+                country = "AR",
+                name = "Buenos Aires",
+                lat = -34.92,
+                lon = -57.95,
+                isFavourite = false,
+                isUpdatingFavoriteState = false,
+                id = 0,
+            ),
+            CityListItemUiModel(
+                country = "AR",
+                name = "Ensenada",
+                lat = -34.92,
+                lon = -57.95,
+                isFavourite = false,
+                isUpdatingFavoriteState = false,
+                id = 0,
+            ),
+            CityListItemUiModel(
+                country = "AR",
+                name = "Berisso",
+                lat = -34.92,
+                lon = -57.95,
+                isFavourite = false,
+                isUpdatingFavoriteState = false,
+                id = 0,
+            ),
         ),
         lazyListState = rememberLazyListState(),
         markerState = rememberMarkerState(),
@@ -106,6 +143,8 @@ private fun LandScapeScreenPreview() {
         searchValue = "",
         onFilterByFavouritesClick = {},
         onSearchValueChange = {},
-        onCityClick = {}
+        onCityClick = {},
+        onFavoriteIconClick = {},
+        isFavoritesFilterActive = false,
     )
 }
