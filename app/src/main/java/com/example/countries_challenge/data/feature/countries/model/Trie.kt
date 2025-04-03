@@ -35,20 +35,6 @@ class Trie {
     }
 
     /**
-     * Searches for the existence of a word in the Trie.
-     *
-     * @param word The word to be searched for in the Trie.
-     * @return True if the word is found in the Trie, false otherwise.
-     */
-    fun search(word: String): Boolean {
-        var node = root
-        word.lowercase().forEach { char ->
-            node = node.children[char] ?: return false
-        }
-        return node.isEndOfWord
-    }
-
-    /**
      * Finds and returns a list of words in the Trie that start with the given prefix.
      * @param prefix The prefix to search for.
      * @return A list of words starting with the specified prefix.
