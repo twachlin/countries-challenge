@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.navigation.compose.rememberNavController
 import com.example.countries_challenge.presentation.feature.mainnavigation.components.BigLoader
+import com.example.countries_challenge.presentation.feature.mainnavigation.screens.error.ErrorScreen
 import com.example.countries_challenge.presentation.feature.mainnavigation.screens.landscape.LandscapeScreen
 import com.example.countries_challenge.presentation.feature.mainnavigation.screens.portrait.PortraitNavigation
 import com.example.countries_challenge.presentation.viewmodel.cities.CitiesViewModel
@@ -56,41 +57,50 @@ fun CitiesListScreen(
     if (state.value.isLoading) {
         BigLoader(modifier = Modifier.fillMaxSize())
     } else {
-
-        if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            LandscapeScreen(
-                modifier = Modifier.fillMaxSize(),
-                cities = state.value.cities,
-                lazyListState = listState,
-                isLoadingMoreCities = state.value.isLoadingMoreCities,
-                markerState = markerState,
-                cameraPositionState = cameraPositionState,
-                searchValue = state.value.searchValue,
-                onSearchValueChange = viewModel::updateSearchValue,
-                onFilterByFavouritesClick = viewModel::onFavoriteFilterButtonClick,
-                onCityClick = { index -> viewModel.onCityClick(index) },
-                onFavoriteIconClick = viewModel::onFavoriteIconClick,
-                isFavoritesFilterActive = state.value.isFavoriteFilterActive,
-                onDetailsButtonClick = onDetailButtonClick
-            )
-        } else {
-            PortraitNavigation(
-                modifier = Modifier.fillMaxSize(),
-                cities = state.value.cities,
-                lazyListState = listState,
-                isLoadingMoreCities = state.value.isLoadingMoreCities,
-                markerState = markerState,
-                cameraPositionState = cameraPositionState,
-                onCityClick = { index -> viewModel.onCityClick(index) },
-                navController = portraitScreenNavController,
-                searchValue = state.value.searchValue,
-                onSearchValueChange = viewModel::updateSearchValue,
-                onFilterByFavouritesClick = viewModel::onFavoriteFilterButtonClick,
-                onFavoriteIconClick = viewModel::onFavoriteIconClick,
-                isFavoritesFilterActive = state.value.isFavoriteFilterActive,
-                onDetailsButtonClick = onDetailButtonClick
-            )
+        when {
+            state.value.showErrorScreen -> {
+                ErrorScreen(
+                    onRetryButtonClick = viewModel::retryLoadingInitialData
+                )
+            }
+            else -> {
+                if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    LandscapeScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        cities = state.value.cities,
+                        lazyListState = listState,
+                        isLoadingMoreCities = state.value.isLoadingMoreCities,
+                        markerState = markerState,
+                        cameraPositionState = cameraPositionState,
+                        searchValue = state.value.searchValue,
+                        onSearchValueChange = viewModel::updateSearchValue,
+                        onFilterByFavouritesClick = viewModel::onFavoriteFilterButtonClick,
+                        onCityClick = { index -> viewModel.onCityClick(index) },
+                        onFavoriteIconClick = viewModel::onFavoriteIconClick,
+                        isFavoritesFilterActive = state.value.isFavoriteFilterActive,
+                        onDetailsButtonClick = onDetailButtonClick
+                    )
+                } else {
+                    PortraitNavigation(
+                        modifier = Modifier.fillMaxSize(),
+                        cities = state.value.cities,
+                        lazyListState = listState,
+                        isLoadingMoreCities = state.value.isLoadingMoreCities,
+                        markerState = markerState,
+                        cameraPositionState = cameraPositionState,
+                        onCityClick = { index -> viewModel.onCityClick(index) },
+                        navController = portraitScreenNavController,
+                        searchValue = state.value.searchValue,
+                        onSearchValueChange = viewModel::updateSearchValue,
+                        onFilterByFavouritesClick = viewModel::onFavoriteFilterButtonClick,
+                        onFavoriteIconClick = viewModel::onFavoriteIconClick,
+                        isFavoritesFilterActive = state.value.isFavoriteFilterActive,
+                        onDetailsButtonClick = onDetailButtonClick
+                    )
+                }
+            }
         }
+
     }
 
     LaunchedEffect(shouldLoadMore) {

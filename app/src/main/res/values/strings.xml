@@ -8,4 +8,10 @@
     <string name="show_favourites">Show favourites</string>
     <string name="detail_screen_title">Detail of city: %1$s</string>
     <string name="back">Back</string>
+
+    <string name="error_adding_to_favorites">Error adding to favorites</string>
+    <string name="error_removing_from_favorites">Error removing from favorites</string>
+
+    <string name="error_screen_title">There has been an error, please try again</string>"
+    <string name="retry">Retry</string>
 </resources>

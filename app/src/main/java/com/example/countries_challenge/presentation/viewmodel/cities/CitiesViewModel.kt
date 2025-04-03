@@ -3,6 +3,7 @@ package com.example.countries_challenge.presentation.viewmodel.cities
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.countries_challenge.domain.extensions.onError
 import com.example.countries_challenge.domain.extensions.onSuccess
 import com.example.countries_challenge.domain.feature.countries.model.CitiesPagedModel
 import com.example.countries_challenge.domain.feature.countries.model.CityModel
@@ -12,9 +13,13 @@ import com.example.countries_challenge.domain.feature.countries.usecase.RemoveCi
 import com.example.countries_challenge.domain.feature.countries.usecase.SetCityAsFavoriteUseCase
 import com.example.countries_challenge.presentation.feature.mainnavigation.components.CityListItemUiModel
 import com.example.countries_challenge.presentation.feature.mainnavigation.screens.model.toCityListItemUIModel
+import com.example.countries_challenge.presentation.viewmodel.cities.Event.ErrorAddingToFavorites
+import com.example.countries_challenge.presentation.viewmodel.cities.Event.ErrorRemovingFromFavorites
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -35,6 +40,9 @@ class CitiesViewModel @Inject constructor(
     private val citiesModel = mutableListOf<CityModel>()
     private var isLastPage = false
 
+    private val _event = MutableSharedFlow<Event>()
+    val event: SharedFlow<Event> = _event
+
     init {
         loadInitialData()
     }
@@ -54,6 +62,19 @@ class CitiesViewModel @Inject constructor(
                 ).onSuccess { model ->
                     updateCities(citiesPagedModel = model)
                     _screenState.update { state -> state.copy(isLoading = false) }
+                }.onError {
+                    _screenState.update { state ->
+                        state.copy(
+                            isLoading = false,
+                            showErrorScreen = true
+                        )
+                    }
+                }
+            }.onError {
+                _screenState.update { state ->
+                    state.copy(
+                        isLoading = false, showErrorScreen = true
+                    )
                 }
             }
         }
@@ -160,6 +181,9 @@ class CitiesViewModel @Inject constructor(
                     citiesModel[localCityIndex] = cityModel.copy(isFavourite = true)
                     updateCityFavoriteStatus(cityId = cityModel.id, isFavorite = true)
                 }
+            }.onError {
+                updateCityFavoriteStatus(cityId = cityModel.id, isFavorite = false)
+                emitEvents(ErrorAddingToFavorites)
             }
         }
     }
@@ -174,6 +198,9 @@ class CitiesViewModel @Inject constructor(
                     citiesModel[localCityIndex] = cityModel.copy(isFavourite = false)
                     updateCityFavoriteStatus(cityId = cityModel.id, isFavorite = false)
                 }
+            }.onError {
+                updateCityFavoriteStatus(cityId = cityModel.id, isFavorite = true)
+                emitEvents(ErrorRemovingFromFavorites)
             }
         }
     }
@@ -194,6 +221,19 @@ class CitiesViewModel @Inject constructor(
             )
         }
     }
+
+    fun retryLoadingInitialData() {
+        _screenState.update { state -> state.copy(showErrorScreen = false) }
+        loadInitialData()
+    }
+
+    private fun emitEvents(vararg events: Event) {
+        events.forEach {
+            viewModelScope.launch {
+                _event.emit(it)
+            }
+        }
+    }
 }
 
 @Stable
@@ -204,4 +244,10 @@ data class CitiesListScreenState(
     val isLoadingMoreCities: Boolean = false,
     val selectedCity: CityListItemUiModel? = null,
     val isFavoriteFilterActive: Boolean = false,
+    val showErrorScreen: Boolean = false,
 )
+
+sealed class Event {
+    data object ErrorAddingToFavorites : Event()
+    data object ErrorRemovingFromFavorites : Event()
+}
