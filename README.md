@@ -33,9 +33,11 @@ A local database is used to persist city data, providing the following benefits:
 
 
 Error screen
+
 ![error_screen](https://github.com/user-attachments/assets/34bc772b-6d84-4287-a773-707f82f35638)
 
 Error with favorites message
+
 ![error_favorites_1](https://github.com/user-attachments/assets/29994710-c81e-4595-b563-416f0d0fb068)
 ![error_favorites_2](https://github.com/user-attachments/assets/dfa180db-beb2-4f21-bab8-86fc1244687d)
 
