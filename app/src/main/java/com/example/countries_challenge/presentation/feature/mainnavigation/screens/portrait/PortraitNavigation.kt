@@ -1,6 +1,5 @@
 package com.example.countries_challenge.presentation.feature.mainnavigation.screens.portrait
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -18,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -57,6 +55,7 @@ fun PortraitNavigation(
     onSearchValueChange: (String) -> Unit,
     onFilterByFavouritesClick: () -> Unit,
     onFavoriteIconClick: (Int) -> Unit,
+    onDetailsButtonClick: (id: Int) -> Unit,
     isFavoritesFilterActive: Boolean,
     modifier: Modifier = Modifier,
     isLoadingMoreCities: Boolean = false,
@@ -80,7 +79,8 @@ fun PortraitNavigation(
                 onSearchValueChange = onSearchValueChange,
                 onFilterByFavouritesClick = onFilterByFavouritesClick,
                 onFavoriteIconClick = onFavoriteIconClick,
-                isFavoritesFilterActive = isFavoritesFilterActive
+                isFavoritesFilterActive = isFavoritesFilterActive,
+                onDetailsButtonClick = onDetailsButtonClick,
             )
         }
 
@@ -104,6 +104,7 @@ private fun PortraitScreenCitiesContent(
     onSearchValueChange: (String) -> Unit,
     onFilterByFavouritesClick: () -> Unit,
     onFavoriteIconClick: (index: Int) -> Unit,
+    onDetailsButtonClick: (id: Int) -> Unit,
     isFavoritesFilterActive: Boolean,
     modifier: Modifier = Modifier,
     isLoadingMoreCities: Boolean = false,
@@ -129,13 +130,15 @@ private fun PortraitScreenCitiesContent(
                 itemsIndexed(cities) { index, model ->
                     CityListItem(
                         modifier = Modifier
-                            .background(if (index % 2 == 0) Color.LightGray else Color.Transparent)
                             .padding(horizontal = 8.dp)
                             .clickable { onCityClick(model.id) },
                         model = model,
                         onFavouriteIconClick = {
                             onFavoriteIconClick(model.id)
                         },
+                        onDetailsButtonClick = {
+                            onDetailsButtonClick(model.id)
+                        }
                     )
                 }
 
@@ -216,5 +219,6 @@ private fun PortraitScreenPreview() {
         onFilterByFavouritesClick = {},
         onFavoriteIconClick = {},
         isFavoritesFilterActive = false,
+        onDetailsButtonClick = {}
     )
 }

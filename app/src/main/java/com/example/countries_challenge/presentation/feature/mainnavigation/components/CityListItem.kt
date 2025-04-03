@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -18,8 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.countries_challenge.R
 import com.example.countries_challenge.presentation.components.buttons.SecondaryButton
 
@@ -37,49 +40,57 @@ data class CityListItemUiModel(
 fun CityListItem(
     model: CityListItemUiModel,
     onFavouriteIconClick: () -> Unit,
+    onDetailsButtonClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(text = stringResource(R.string.city_title, model.name, model.country))
-            Spacer(modifier = Modifier.size(2.dp))
-            Text(text = stringResource(R.string.city_subtitle, model.lat, model.lon))
-        }
-        SecondaryButton(
-            modifier = Modifier.padding(start = 8.dp),
-            text = stringResource(id = R.string.details),
-            onClick = {},
-        )
-        Box(
-            modifier = Modifier
-                .padding(8.dp),
-            contentAlignment = Alignment.Center
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier.padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (model.isUpdatingFavoriteState) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.secondary
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.city_title, model.name, model.country),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
                 )
-            } else {
-                Icon(
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clickable(onClick = onFavouriteIconClick),
-                    painter = painterResource(
-                        id = if (model.isFavourite) {
-                            R.drawable.ic_favorite_filled
-                        } else {
-                            R.drawable.ic_favourite_border
-                        }
-                    ),
-                    contentDescription = null
-                )
+                Spacer(modifier = Modifier.size(4.dp))
+                Text(text = stringResource(R.string.city_subtitle, model.lat, model.lon))
+            }
+            SecondaryButton(
+                modifier = Modifier.padding(start = 8.dp),
+                text = stringResource(id = R.string.details),
+                onClick = { onDetailsButtonClick() },
+            )
+            Box(
+                modifier = Modifier
+                    .padding(8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (model.isUpdatingFavoriteState) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                } else {
+                    Icon(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable(onClick = onFavouriteIconClick),
+                        painter = painterResource(
+                            id = if (model.isFavourite) {
+                                R.drawable.ic_favorite_filled
+                            } else {
+                                R.drawable.ic_favourite_border
+                            }
+                        ),
+                        contentDescription = null
+                    )
+                }
             }
         }
+        HorizontalDivider(modifier = Modifier.fillMaxWidth())
     }
 }
 
@@ -99,6 +110,7 @@ private fun CityListItemPreview() {
                 isUpdatingFavoriteState = false,
                 id = 1,
             ),
+            onDetailsButtonClick = {},
         )
         CityListItem(
             modifier = Modifier.fillMaxWidth(),
@@ -112,6 +124,7 @@ private fun CityListItemPreview() {
                 isUpdatingFavoriteState = false,
                 id = 1,
             ),
+            onDetailsButtonClick = {},
         )
         CityListItem(
             modifier = Modifier.fillMaxWidth(),
@@ -125,6 +138,7 @@ private fun CityListItemPreview() {
                 isUpdatingFavoriteState = true,
                 id = 1,
             ),
+            onDetailsButtonClick = {},
         )
     }
 }
