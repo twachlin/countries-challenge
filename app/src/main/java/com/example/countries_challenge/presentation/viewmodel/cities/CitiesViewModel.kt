@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -37,26 +36,24 @@ class CitiesViewModel @Inject constructor(
     private var isLastPage = false
 
     init {
-        importCitiesIfNecessary()
+        loadInitialData()
     }
 
     /**
      * Imports cities if the local database is empty. And then fetches the first page of cities.
      */
-    fun importCitiesIfNecessary() {
+    fun loadInitialData() {
         _screenState.update { state -> state.copy(isLoading = true) }
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                importCountriesUseCase.execute(Unit).onSuccess {
-                    getCitiesPagedUseCase.execute(
-                        params = GetCitiesPagedUseCase.Params(
-                            page = citiesPage,
-                            prefix = null,
-                        )
-                    ).onSuccess { model ->
-                        updateCities(citiesPagedModel = model)
-                        _screenState.update { state -> state.copy(isLoading = false) }
-                    }
+        viewModelScope.launch(Dispatchers.IO) {
+            importCountriesUseCase.execute(Unit).onSuccess {
+                getCitiesPagedUseCase.execute(
+                    params = GetCitiesPagedUseCase.Params(
+                        page = citiesPage,
+                        prefix = null,
+                    )
+                ).onSuccess { model ->
+                    updateCities(citiesPagedModel = model)
+                    _screenState.update { state -> state.copy(isLoading = false) }
                 }
             }
         }
@@ -64,19 +61,17 @@ class CitiesViewModel @Inject constructor(
 
     private fun getCitiesPaged(prefix: String?) {
         _screenState.update { state -> state.copy(isLoadingMoreCities = true) }
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                getCitiesPagedUseCase.execute(
-                    params = GetCitiesPagedUseCase.Params(
-                        page = citiesPage,
-                        prefix = prefix,
-                        showOnlyFavorites = screenState.value.isFavoriteFilterActive
-                    )
-                ).onSuccess { model ->
-                    updateCities(citiesPagedModel = model)
-                }
-                citiesPage++
+        viewModelScope.launch(Dispatchers.IO) {
+            getCitiesPagedUseCase.execute(
+                params = GetCitiesPagedUseCase.Params(
+                    page = citiesPage,
+                    prefix = prefix,
+                    showOnlyFavorites = screenState.value.isFavoriteFilterActive
+                )
+            ).onSuccess { model ->
+                updateCities(citiesPagedModel = model)
             }
+            citiesPage++
         }
     }
 
@@ -156,64 +151,47 @@ class CitiesViewModel @Inject constructor(
     }
 
     fun addCityToFavorites(cityModel: CityModel) {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                setCityAsFavoriteUseCase.execute(
-                    params = SetCityAsFavoriteUseCase.Params(city = cityModel)
-                ).onSuccess {
-                    // 1. Update the local list (citiesModel)
-                    val localCityIndex = citiesModel.indexOfFirst { it.id == cityModel.id }
-                    if (localCityIndex != -1) {
-                        citiesModel[localCityIndex] = cityModel.copy(isFavourite = true)
-
-                        _screenState.update { state ->
-                            state.copy(
-                                cities = state.cities.map { uiModel ->
-                                    if (uiModel.id == cityModel.id) {
-                                        uiModel.copy(
-                                            isFavourite = true,
-                                            isUpdatingFavoriteState = false
-                                        )
-                                    } else {
-                                        uiModel
-                                    }
-                                }
-                            )
-                        }
-                    }
+        viewModelScope.launch(Dispatchers.IO) {
+            setCityAsFavoriteUseCase.execute(
+                params = SetCityAsFavoriteUseCase.Params(city = cityModel)
+            ).onSuccess {
+                val localCityIndex = citiesModel.indexOfFirst { it.id == cityModel.id }
+                if (localCityIndex != -1) {
+                    citiesModel[localCityIndex] = cityModel.copy(isFavourite = true)
+                    updateCityFavoriteStatus(cityId = cityModel.id, isFavorite = true)
                 }
             }
         }
     }
 
     fun removeCityFromFavorites(cityModel: CityModel) {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                removeCityFromFavoritesUseCase.execute(
-                    params = RemoveCityFromFavoritesUseCase.Params(city = cityModel)
-                ).onSuccess {
-                    // 1. Update the local list (citiesModel)
-                    val localCityIndex = citiesModel.indexOfFirst { it.id == cityModel.id }
-                    if (localCityIndex != -1) {
-                        citiesModel[localCityIndex] = cityModel.copy(isFavourite = false)
-
-                        _screenState.update { state ->
-                            state.copy(
-                                cities = state.cities.map { uiModel ->
-                                    if (uiModel.id == cityModel.id) {
-                                        uiModel.copy(
-                                            isFavourite = false,
-                                            isUpdatingFavoriteState = false
-                                        )
-                                    } else {
-                                        uiModel
-                                    }
-                                }
-                            )
-                        }
-                    }
+        viewModelScope.launch(Dispatchers.IO) {
+            removeCityFromFavoritesUseCase.execute(
+                params = RemoveCityFromFavoritesUseCase.Params(city = cityModel)
+            ).onSuccess {
+                val localCityIndex = citiesModel.indexOfFirst { it.id == cityModel.id }
+                if (localCityIndex != -1) {
+                    citiesModel[localCityIndex] = cityModel.copy(isFavourite = false)
+                    updateCityFavoriteStatus(cityId = cityModel.id, isFavorite = false)
                 }
             }
+        }
+    }
+
+    private fun updateCityFavoriteStatus(cityId: Int, isFavorite: Boolean) {
+        _screenState.update { state ->
+            state.copy(
+                cities = state.cities.map { city ->
+                    if (city.id == cityId) {
+                        city.copy(
+                            isFavourite = isFavorite,
+                            isUpdatingFavoriteState = false
+                        )
+                    } else {
+                        city
+                    }
+                }
+            )
         }
     }
 }
