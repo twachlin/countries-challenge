@@ -44,6 +44,7 @@ class CitiesViewModel @Inject constructor(
      * Imports cities if the local database is empty. And then fetches the first page of cities.
      */
     fun importCitiesIfNecessary() {
+        _screenState.update { state -> state.copy(isLoading = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 importCountriesUseCase.execute(Unit).onSuccess {
@@ -62,6 +63,7 @@ class CitiesViewModel @Inject constructor(
     }
 
     private fun getCitiesPaged(prefix: String?) {
+        _screenState.update { state -> state.copy(isLoadingMoreCities = true) }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 getCitiesPagedUseCase.execute(
@@ -92,8 +94,7 @@ class CitiesViewModel @Inject constructor(
     }
 
     fun loadMoreCities(prefix: String?) {
-        if (!isLastPage) {
-            _screenState.update { state -> state.copy(isLoadingMoreCities = true) }
+        if (!isLastPage && !screenState.value.isLoadingMoreCities) {
             getCitiesPaged(prefix = prefix)
         }
     }
@@ -111,11 +112,13 @@ class CitiesViewModel @Inject constructor(
         citiesPage = 1
         isLastPage = false
         _screenState.update { state -> state.copy(cities = emptyList()) }
+        citiesModel.clear()
     }
 
-    fun onCityClick(index: Int) {
-        _screenState.update { state ->
-            state.copy(selectedCity = state.cities[index])
+    fun onCityClick(id: Int) {
+        val selectedCity = screenState.value.cities.firstOrNull { it.id == id }
+        selectedCity?.let {
+            _screenState.update { state -> state.copy(selectedCity = selectedCity) }
         }
     }
 
@@ -135,10 +138,7 @@ class CitiesViewModel @Inject constructor(
 
     fun onFavoriteFilterButtonClick() {
         _screenState.update { state ->
-            state.copy(
-                isLoading = true,
-                isFavoriteFilterActive = !state.isFavoriteFilterActive
-            )
+            state.copy(isFavoriteFilterActive = !state.isFavoriteFilterActive)
         }
         makeNewSearch()
     }
@@ -181,7 +181,6 @@ class CitiesViewModel @Inject constructor(
                             )
                         }
                     }
-
                 }
             }
         }

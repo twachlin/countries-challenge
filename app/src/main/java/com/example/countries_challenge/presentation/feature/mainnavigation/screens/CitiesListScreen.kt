@@ -32,7 +32,10 @@ import kotlinx.coroutines.flow.filter
 
 @OptIn(FlowPreview::class)
 @Composable
-fun CitiesListScreen(viewModel: CitiesViewModel) {
+fun CitiesListScreen(
+    viewModel: CitiesViewModel,
+    onDetailButtonClick: (id: Int) -> Unit,
+) {
     var isFirstTime by rememberSaveable { mutableStateOf(false) }
     val state = viewModel.screenState.collectAsState()
     val listState = rememberLazyListState()
@@ -68,6 +71,7 @@ fun CitiesListScreen(viewModel: CitiesViewModel) {
                 onCityClick = { index -> viewModel.onCityClick(index) },
                 onFavoriteIconClick = viewModel::onFavoriteIconClick,
                 isFavoritesFilterActive = state.value.isFavoriteFilterActive,
+                onDetailsButtonClick = onDetailButtonClick
             )
         } else {
             PortraitNavigation(
@@ -84,6 +88,7 @@ fun CitiesListScreen(viewModel: CitiesViewModel) {
                 onFilterByFavouritesClick = viewModel::onFavoriteFilterButtonClick,
                 onFavoriteIconClick = viewModel::onFavoriteIconClick,
                 isFavoritesFilterActive = state.value.isFavoriteFilterActive,
+                onDetailsButtonClick = onDetailButtonClick
             )
         }
     }

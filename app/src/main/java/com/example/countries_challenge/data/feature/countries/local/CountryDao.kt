@@ -15,12 +15,12 @@ interface CountryDao {
 
     @Query(
         """
-          SELECT * FROM cities
-          WHERE LOWER(name) IN (:cityNames) 
-          AND (NOT :showOnlyFavorites OR isFavourite = 1)
-          ORDER BY name 
-          LIMIT :pageSize OFFSET :offset
-          """
+      SELECT * FROM cities
+      WHERE LOWER(name) IN (:cityNames) 
+      AND (NOT :showOnlyFavorites OR isFavourite = 1)
+      ORDER BY name, country
+      LIMIT :pageSize OFFSET :offset
+      """
     )
     fun getCitiesByNamePaged(
         cityNames: List<String>,
@@ -31,11 +31,11 @@ interface CountryDao {
 
     @Query(
         """
-          SELECT * FROM cities 
-          WHERE (NOT :showOnlyFavorites OR isFavourite = 1)
-          ORDER BY name ASC 
-          LIMIT :pageSize OFFSET :offset
-          """
+      SELECT * FROM cities 
+      WHERE (NOT :showOnlyFavorites OR isFavourite = 1)
+      ORDER BY name, country
+      LIMIT :pageSize OFFSET :offset
+      """
     )
     fun getCitiesPaged(
         pageSize: Int,

@@ -1,6 +1,5 @@
 package com.example.countries_challenge.presentation.feature.mainnavigation.screens.landscape
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,7 +12,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.countries_challenge.presentation.feature.mainnavigation.components.CityListItem
@@ -35,8 +33,9 @@ fun LandscapeScreen(
     markerState: MarkerState,
     onSearchValueChange: (String) -> Unit,
     onFilterByFavouritesClick: () -> Unit,
-    onFavoriteIconClick: (Int) -> Unit,
-    onCityClick: (Int) -> Unit,
+    onFavoriteIconClick: (id: Int) -> Unit,
+    onCityClick: (id: Int) -> Unit,
+    onDetailsButtonClick: (id: Int) -> Unit,
     isFavoritesFilterActive: Boolean,
     modifier: Modifier = Modifier,
     isLoadingMoreCities: Boolean = false,
@@ -62,13 +61,15 @@ fun LandscapeScreen(
                         itemsIndexed(cities) { index, model ->
                             CityListItem(
                                 modifier = Modifier
-                                    .background(if (index % 2 == 0) Color.LightGray else Color.Transparent)
                                     .padding(horizontal = 8.dp)
                                     .clickable { onCityClick(model.id) },
                                 model = model,
                                 onFavouriteIconClick = {
                                     onFavoriteIconClick(model.id)
                                 },
+                                onDetailsButtonClick = {
+                                    onDetailsButtonClick(model.id)
+                                }
                             )
                         }
 
@@ -146,5 +147,6 @@ private fun LandScapeScreenPreview() {
         onCityClick = {},
         onFavoriteIconClick = {},
         isFavoritesFilterActive = false,
+        onDetailsButtonClick = {},
     )
 }

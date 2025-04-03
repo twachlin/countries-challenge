@@ -31,7 +31,12 @@ fun MainNavigation(
         startDestination = CitiesList
     ) {
         composable<CitiesList> {
-            CitiesListScreen(viewModel = viewModel)
+            CitiesListScreen(
+                viewModel = viewModel,
+                onDetailButtonClick = { cityId ->
+                    navController.navigate(CityDetails(cityId = cityId))
+                }
+            )
         }
         composable<CityDetails> { backStackEntry ->
             val cityDetails: CityDetails = backStackEntry.toRoute()
